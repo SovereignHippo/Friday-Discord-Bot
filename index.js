@@ -1,6 +1,8 @@
 // Require the necessary discord.js classes
-const { Client, Events, GatewayIntentBits, Guild } = require('discord.js');
-require('dotenv').config();
+import { Client, Events, GatewayIntentBits, Guild } from 'discord.js';
+import {GenerateRandomQuestionResponse} from './data/questionResponses.js';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Create a new client instance and define intents
 const client = new Client({ 
@@ -15,6 +17,20 @@ const client = new Client({
 //all lowercase the word that triggers the bot
 const WakeWord = "friday ";
 
+const HelpMenuArray = [
+    {
+        command: "Hello",
+        description: "Say Hello."
+    },
+    {
+        command: "Kill [username]",
+        description: "I will kill someone for you."
+    },
+    {
+        command: "What [question]",
+        description: "I will answer any question you have."
+    },
+];
 
 // When the client is ready, run this code (only once)
 client.once(Events.ClientReady, readyClient => {
@@ -37,18 +53,31 @@ async function OnClient(message){
     if(messageText.substring(0,WakeWord.length) != WakeWord) return;
 
     //sets messageText to only the message after frifay
-    messageArray = messageText.split(" ");
+    let messageArray = messageText.split(" ");
 
     switch(messageArray[1]){
 
+        case "help":
+            let finalMessage = "--------------------------------------\n";
+            for(let i = 0; i < HelpMenuArray.length; i++){
+                finalMessage += "+" + HelpMenuArray[i].command + ": ";
+                finalMessage += HelpMenuArray[i].description + "\n";
+            }
+            finalMessage += "--------------------------------------"
+            message.channel.send(finalMessage);
+            break;
         case "hello":
             message.channel.send("Hello");
             break;
+        case "say":
+            message.channel.send(CombineArrayString(2));
+            break;
         case "kill":
+
             if(messageArray[2]){ //message 2 is the name of the person to timeout
 
                 //user can timeout self
-                if(messageArray[2] == "me" || messageArray[2] == "myself"){
+                if(["me","myself","yourself"].includes(messageArray[2])){
                     //set target to the user who sent it
                     
                     messageArray[2] = message.author.username;
@@ -90,10 +119,23 @@ async function OnClient(message){
                 }
             }
             break;
+        case "what":
+            message.channel.send(GenerateRandomQuestionResponse());
+            break;
         default:
-            message.channel.send("What do you want??");
+            message.channel.send("What do you want?");
     }
     
+}
+
+function CombineArrayString(startingIndex){
+    let finalMessage = "";
+        for(let i = startingIndex; i < messageArray.length; i++){
+            //starting from the secound word string all words back together
+            if(i != startingIndex) finalMessage += " "; //Add a space before every additional word
+            finalMessage += messageArray[i];
+        }
+    return finalMessage;
 }
 
 
